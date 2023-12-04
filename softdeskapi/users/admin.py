@@ -1,11 +1,10 @@
 from django import forms
 from django.contrib import admin
+from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.core.exceptions import ValidationError
-
-from users.models import User
 
 
 class UserCreationForm(forms.ModelForm):
@@ -16,7 +15,7 @@ class UserCreationForm(forms.ModelForm):
     password2 = forms.CharField(label="Confirm password", widget=forms.PasswordInput)
 
     class Meta:
-        model = User
+        model = get_user_model()
         fields = (
             "username",
             "birth_date",
@@ -51,7 +50,7 @@ class UserChangeForm(forms.ModelForm):
     password = ReadOnlyPasswordHashField()
 
     class Meta:
-        model = User
+        model = get_user_model()
         fields = (
             "username",
             "birth_date",
@@ -113,7 +112,7 @@ class UserAdmin(BaseUserAdmin):
 
 
 # Now registering the new UserAdmin...
-admin.site.register(User, UserAdmin)
+admin.site.register(get_user_model(), UserAdmin)
 # ... and since we're not using Django's built-in permissions,
 # unregister the Group model from admin.
 admin.site.unregister(Group)
