@@ -11,14 +11,23 @@ class UserManager(BaseUserManager):
     """Custom user manager."""
 
     def create_user(
-        self, username, birth_date, can_be_contacted, can_data_be_shared, password=None
+        self,
+        username,
+        birth_date,
+        can_be_contacted,
+        can_data_be_shared,
+        password,
+        is_staff=False,
+        is_active=True,
     ):
         """
-        Creates and saves a User with the given attributes.
-        Checks if the user is at least 15 years old.
+        Creates and saves a User with the given attributes. Password is required.
+        Birth date required to check if the user is at least 15 years old.
         """
         if not username:
             raise ValueError("Users must have a username")
+        if not password:
+            raise ValueError("Users must have a password")
         if not birth_date:
             raise ValueError("Users must have a birth date")
         # check if user is at least 15 years old
@@ -29,13 +38,15 @@ class UserManager(BaseUserManager):
             birth_date=birth_date,
             can_be_contacted=can_be_contacted,
             can_data_be_shared=can_data_be_shared,
+            is_staff=is_staff,
+            is_active=is_active,
         )
         user.set_password(password)
         user.save(using=self._db)
         return user
 
     def create_superuser(
-        self, username, birth_date, can_be_contacted, can_data_be_shared, password=None
+        self, username, birth_date, can_be_contacted, can_data_be_shared, password
     ):
         """Same as create_user but with is_staff and is_superuser set to True."""
         user = self.create_user(
