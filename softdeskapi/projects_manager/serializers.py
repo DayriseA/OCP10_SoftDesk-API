@@ -18,7 +18,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             "contributors",
             "created_time",
         ]
-        read_only_fields = ["id", "created_time"]
+        read_only_fields = ["id", "author", "created_time"]
 
     def get_contributors_queryset(self):
         """Every active user can be a contributor."""

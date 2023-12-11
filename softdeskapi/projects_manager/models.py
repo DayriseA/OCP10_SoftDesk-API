@@ -22,6 +22,7 @@ class Project(models.Model):
     )
     contributors = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
+        limit_choices_to={"is_active": True},
         through="Contributor",
         related_name="contributing_projects",
     )
@@ -42,15 +43,3 @@ class Contributor(models.Model):
     def __str__(self):
         """Return user and project name."""
         return f"{self.user.username} - {self.project.name}"
-
-
-class Issue(models.Model):
-    """Issue model."""
-
-    pass
-
-
-class Comment(models.Model):
-    """Comment model."""
-
-    pass
