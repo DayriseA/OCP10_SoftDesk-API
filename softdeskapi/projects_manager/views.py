@@ -1,7 +1,7 @@
 from rest_framework.viewsets import ModelViewSet
 
-from projects_manager.models import Project
-from projects_manager.serializers import ProjectSerializer
+from projects_manager.models import Project, Issue
+from projects_manager.serializers import ProjectSerializer, IssueSerializer
 
 
 class ProjectViewSet(ModelViewSet):
@@ -19,3 +19,12 @@ class ProjectViewSet(ModelViewSet):
         """Handle PATCH request."""
         print("PARTIAL UPDATE METHOD IN PROJECTVIEWSET CALLED")  # debug
         return super().partial_update(request, *args, **kwargs)
+
+
+class IssueViewSet(ModelViewSet):
+    queryset = Issue.objects.all()
+    serializer_class = IssueSerializer
+
+    def perform_create(self, serializer):
+        """The user who made the request is set as the author of the issue."""
+        serializer.save(author=self.request.user)
