@@ -11,16 +11,8 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = [
-            "id",
-            "name",
-            "description",
-            "type",
-            "author",
-            "contributors",
-            "created_time",
-        ]
-        read_only_fields = ["id", "author", "created_time"]
+        fields = "__all__"
+        read_only_fields = ["author", "created_time"]
 
     def get_contributors_queryset(self):
         """Every active user can be a contributor."""
@@ -102,15 +94,6 @@ class IssueSerializer(serializers.ModelSerializer):
         model = Issue
         fields = "__all__"
         read_only_fields = ("project", "author", "created_time")
-
-    def create(self, validated_data):
-        """An issue must be linked to a project."""
-        project = validated_data.get("project")
-        if not project:
-            raise serializers.ValidationError(
-                "A project must be provided to create an issue."
-            )
-        return super().create(validated_data)
 
     def validate_assignees(self, assignees):
         """Check if assignees are contributors of the project."""
