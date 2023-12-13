@@ -1,10 +1,11 @@
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.viewsets import ModelViewSet
 
-from projects_manager.models import Project, Issue
+from projects_manager.models import Project, Issue, Comment
 from projects_manager.serializers import (
     ProjectSerializer,
     IssueSerializer,
+    CommentSerializer,
 )
 
 
@@ -45,4 +46,27 @@ class IssueViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         """The user who made the request is set as the author of the issue."""
+        serializer.save(author=self.request.user)
+
+
+class CommentViewSet(ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+
+    def create(self, request, *args, **kwargs):
+        """Override create() method to only allow contributors to comment."""
+        # Check if the issue exists and return an error if not
+        try:
+            issue_id = request.data["issue"]
+            issue = Issue.objects.get(id=issue_id)
+        except Issue.DoesNotExist:
+            raise ValidationError(f"Issue {issue_id} not found")
+        if request.user not in issue.project.contributors.all():
+            raise PermissionDenied(
+                "Only contributors of this project can comment its issues"
+            )
+        return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        """The user who made the request is set as the author of the comment."""
         serializer.save(author=self.request.user)

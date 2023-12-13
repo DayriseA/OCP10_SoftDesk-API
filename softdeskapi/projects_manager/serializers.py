@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from projects_manager.models import Project, Issue
+from projects_manager.models import Project, Issue, Comment
 
 User = get_user_model()
 
@@ -153,3 +153,23 @@ class IssueSerializer(serializers.ModelSerializer):
         if "project" not in data and self.instance:
             data["project"] = self.instance.project.id
         return super().to_internal_value(data)
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """Serializer for comment objects."""
+
+    issue = serializers.PrimaryKeyRelatedField(queryset=Issue.objects.all())
+
+    class Meta:
+        model = Comment
+        fields = "__all__"
+        read_only_fields = ("uuid", "issue", "author", "created_time")
+
+    def update(self, instance, validated_data):
+        """
+        The issue of a comment cannot be changed and is automatically set to the
+        issue of the instance. If someone tries to, we inform him that he cannot.
+        """
+        if "issue" in validated_data and instance.issue != validated_data["issue"]:
+            raise serializers.ValidationError("Issue cannot be changed.")
+        return super().update(instance, validated_data)
