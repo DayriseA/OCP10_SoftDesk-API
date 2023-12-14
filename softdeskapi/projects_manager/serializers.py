@@ -7,7 +7,10 @@ User = get_user_model()
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-    """Serializer for project objects."""
+    """
+    Serializer for project objects.
+    For educational purposes, PUT and PATCH requests handle contributors differently.
+    """
 
     class Meta:
         model = Project
@@ -25,14 +28,12 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def validate_name(self, value):
         """Check if project name is unique."""
-        print("VALIDATE_NAME METHOD IN PROJECT SERIALIZER CALLED")  # debug
         if Project.objects.filter(name=value).exists():
             raise serializers.ValidationError("Project name already exists")
         return value
 
     def validate_type(self, value):
         """Check if project type is valid."""
-        print("VALIDATE_TYPE METHOD IN PROJECT SERIALIZER CALLED")  # debug
         if value not in [choice[0] for choice in Project.PROJECT_TYPES]:
             raise serializers.ValidationError(
                 "Valid project types are: 'backend', 'frontend', 'ios', 'android'"
@@ -44,7 +45,6 @@ class ProjectSerializer(serializers.ModelSerializer):
         Create and return a new project. The author is added to the contributors.
         If a list of contributors is provided, we add them to the project.
         """
-        print("CREATE METHOD IN PROJECT SERIALIZER CALLED")  # debug
         contributors = validated_data.pop("contributors", [])
 
         project = Project.objects.create(**validated_data)
@@ -61,18 +61,15 @@ class ProjectSerializer(serializers.ModelSerializer):
         we replace the existing contributors if request is PUT, or add them to the
         existing ones if request is PATCH.
         """
-        print("UPDATE METHOD IN PROJECT SERIALIZER CALLED")  # debug
         contributors = validated_data.pop("contributors", [])
         # Update other simple fields with super()
         instance = super().update(instance, validated_data)
 
         # Check if request is PATCH or PUT
         if self.partial:
-            print("PATCH REQUEST LOGIC APPLIED TO CONTRIBUTORS")  # debug
             for contributor in contributors:
                 instance.contributors.add(contributor.id)
         else:
-            print("PUT REQUEST LOGIC APPLIED TO CONTRIBUTORS")  # debug
             # Replace the contributors, excepted the author, with the new list provided
             instance.contributors.clear()
             if instance.author:
