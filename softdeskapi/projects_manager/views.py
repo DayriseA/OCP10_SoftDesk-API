@@ -2,6 +2,7 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.viewsets import ModelViewSet
 
 from projects_manager.models import Project, Issue, Comment
+from projects_manager.permissions import AuthorOrReadOnly
 from projects_manager.serializers import (
     ProjectSerializer,
     IssueSerializer,
@@ -12,6 +13,7 @@ from projects_manager.serializers import (
 class ProjectViewSet(ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
+    permission_classes = [AuthorOrReadOnly]
 
     def perform_create(self, serializer):
         """The user who made the request is set as the author of the project."""
@@ -29,6 +31,7 @@ class ProjectViewSet(ModelViewSet):
 class IssueViewSet(ModelViewSet):
     queryset = Issue.objects.all()
     serializer_class = IssueSerializer
+    permission_classes = [AuthorOrReadOnly]
 
     def create(self, request, *args, **kwargs):
         """Override create() method to only allow contributors to create issues."""
@@ -52,6 +55,7 @@ class IssueViewSet(ModelViewSet):
 class CommentViewSet(ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+    permission_classes = [AuthorOrReadOnly]
 
     def create(self, request, *args, **kwargs):
         """Override create() method to only allow contributors to comment."""
