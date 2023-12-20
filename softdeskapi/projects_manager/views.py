@@ -8,11 +8,27 @@ from projects_manager.serializers import (
     ProjectSerializer,
     IssueSerializer,
     CommentSerializer,
+    ProjectListSerializer,
+    IssueListSerializer,
 )
 
 
-class ProjectViewSet(ModelViewSet):
+class MultipleSerializerMixin:
+    """Mixin to use differents serializers for different actions."""
+
+    # For now, we only need a different serializer for list action
+    list_serializer_class = None
+
+    def get_serializer_class(self):
+        """Return a different serializer for list action."""
+        if self.action == "list" and self.list_serializer_class is not None:
+            return self.list_serializer_class
+        return super().get_serializer_class()
+
+
+class ProjectViewSet(MultipleSerializerMixin, ModelViewSet):
     serializer_class = ProjectSerializer
+    list_serializer_class = ProjectListSerializer
     permission_classes = [AuthorOrReadOnly]
 
     def get_queryset(self):
@@ -41,8 +57,9 @@ class ProjectViewSet(ModelViewSet):
         return super().partial_update(request, *args, **kwargs)
 
 
-class IssueViewSet(ModelViewSet):
+class IssueViewSet(MultipleSerializerMixin, ModelViewSet):
     serializer_class = IssueSerializer
+    list_serializer_class = IssueListSerializer
     permission_classes = [AuthorOrReadOnly]
 
     def get_queryset(self):

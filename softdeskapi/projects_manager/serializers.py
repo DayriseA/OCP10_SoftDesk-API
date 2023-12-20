@@ -170,3 +170,19 @@ class CommentSerializer(serializers.ModelSerializer):
         if "issue" in validated_data and instance.issue != validated_data["issue"]:
             raise serializers.ValidationError("Issue cannot be changed.")
         return super().update(instance, validated_data)
+
+
+class ProjectListSerializer(serializers.ModelSerializer):
+    """Serializer for listing projects."""
+
+    class Meta:
+        model = Project
+        fields = ["id", "name", "type", "description"]
+
+
+class IssueListSerializer(serializers.ModelSerializer):
+    """Serializer for listing issues."""
+
+    class Meta:
+        model = Issue
+        fields = ["id", "project", "name", "type", "priority", "status"]
