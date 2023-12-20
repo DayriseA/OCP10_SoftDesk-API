@@ -3,8 +3,8 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 class AuthorOrReadOnly(BasePermission):
     """
-    Only allow the author of an object to edit it.
-    Superusers and staff members can edit any object.
+    Read-only permissions for any authenticated user. Write permissions for the author
+    of the object or superusers and staff members.
     """
 
     def has_permission(self, request, view):
