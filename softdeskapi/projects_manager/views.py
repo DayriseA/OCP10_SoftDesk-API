@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.viewsets import ModelViewSet
 
@@ -11,9 +12,23 @@ from projects_manager.serializers import (
 
 
 class ProjectViewSet(ModelViewSet):
-    queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [AuthorOrReadOnly]
+
+    def get_queryset(self):
+        """
+        Restricted to authors and contributors. Superusers and staff members can see all
+        projects.
+        """
+        user = self.request.user
+        if user.is_superuser or user.is_staff:
+            return Project.objects.all()
+        else:
+            return (
+                Project.objects.filter(Q(author=user) | Q(contributors=user))
+                .distinct()
+                .order_by("id")
+            )
 
     def perform_create(self, serializer):
         """The user who made the request is set as the author of the project."""
@@ -27,9 +42,23 @@ class ProjectViewSet(ModelViewSet):
 
 
 class IssueViewSet(ModelViewSet):
-    queryset = Issue.objects.all()
     serializer_class = IssueSerializer
     permission_classes = [AuthorOrReadOnly]
+
+    def get_queryset(self):
+        """
+        Restricted to authors and contributors. Superusers and staff members can see all
+        issues.
+        """
+        user = self.request.user
+        if user.is_superuser or user.is_staff:
+            return Issue.objects.all()
+        else:
+            return (
+                Issue.objects.filter(Q(author=user) | Q(project__contributors=user))
+                .distinct()
+                .order_by("id")
+            )
 
     def create(self, request, *args, **kwargs):
         """Override create() method to only allow contributors to create issues."""
@@ -51,9 +80,25 @@ class IssueViewSet(ModelViewSet):
 
 
 class CommentViewSet(ModelViewSet):
-    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [AuthorOrReadOnly]
+
+    def get_queryset(self):
+        """
+        Restricted to authors and contributors. Superusers and staff members can see all
+        comments.
+        """
+        user = self.request.user
+        if user.is_superuser or user.is_staff:
+            return Comment.objects.all()
+        else:
+            return (
+                Comment.objects.filter(
+                    Q(author=user) | Q(issue__project__contributors=user)
+                )
+                .distinct()
+                .order_by("id")
+            )
 
     def create(self, request, *args, **kwargs):
         """Override create() method to only allow contributors to comment."""
