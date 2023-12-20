@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import serializers
 
+User = get_user_model()
+
 
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for user objects."""
@@ -10,7 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
     password_confirmation = serializers.CharField(write_only=True)
 
     class Meta:
-        model = get_user_model()
+        model = User
         fields = [
             "id",
             "username",
@@ -50,7 +52,7 @@ class UserSerializer(serializers.ModelSerializer):
         """Create and return a new user."""
         password = validated_data.pop("password")
         validated_data.pop("password_confirmation", None)
-        user = get_user_model().objects.create_user(password=password, **validated_data)
+        user = User.objects.create_user(password=password, **validated_data)
         return user
 
     def update(self, instance, validated_data):
@@ -60,3 +62,11 @@ class UserSerializer(serializers.ModelSerializer):
         if password and password_confirmation:
             instance.set_password(password)
         return super().update(instance, validated_data)
+
+
+class UserListSerializer(serializers.ModelSerializer):
+    """Serializer for listing users."""
+
+    class Meta:
+        model = User
+        fields = ["id", "username"]
