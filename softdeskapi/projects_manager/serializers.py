@@ -155,7 +155,9 @@ class IssueSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     """Serializer for comment objects."""
 
-    issue = serializers.HyperlinkedIdentityField(view_name="issues-detail")
+    issue = serializers.HyperlinkedRelatedField(
+        view_name="issues-detail", queryset=Issue.objects.all()
+    )
 
     class Meta:
         model = Comment

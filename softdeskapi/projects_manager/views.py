@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.urls import resolve
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.viewsets import ModelViewSet
 
@@ -121,7 +122,12 @@ class CommentViewSet(ModelViewSet):
         """Override create() method to only allow contributors to comment."""
         # Check if the issue exists and return an error if not
         try:
-            issue_id = request.data["issue"]
+            issue_full_url = request.data["issue"]
+
+            # resolve() expects an URL path, not a full URL
+            matched_view = resolve(issue_full_url.replace("http://localhost:8000", ""))
+            # issue_id = matched_view.kwargs.get("id")  # Doesn't work, why ?
+            issue_id = matched_view.kwargs.get("pk")
             issue = Issue.objects.get(id=issue_id)
         except Issue.DoesNotExist:
             raise ValidationError(f"Issue {issue_id} not found")
