@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
-from users.permissions import IsSelfOrAdmin
+from users.permissions import IsSelfOrAdmin, IsAdmin
 from users.serializers import UserSerializer, UserListSerializer
 
 
@@ -26,9 +27,14 @@ class UserViewSet(ModelViewSet):
 
     def get_permissions(self):
         """
-        Any authenticated user can see the list of users. Only superusers, staff and
-        the user himself can see the details of a user.
+        Any authenticated user can see the list of users. Only admins can create users.
+        Only the user himself (or admins) can see or update his details, or delete his
+        account.
         """
-        if self.action == "retrieve":
+        if self.action == "list":
+            self.permission_classes = [IsAuthenticated]
+        elif self.action == "create":
+            self.permission_classes = [IsAdmin]
+        else:
             self.permission_classes = [IsSelfOrAdmin]
         return super().get_permissions()
