@@ -4,7 +4,7 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.viewsets import ModelViewSet
 
 from projects_manager.models import Project, Issue, Comment
-from projects_manager.permissions import AuthorOrReadOnly
+from projects_manager.permissions import AuthorOrReadOnly, AuthorOrAssignee
 from projects_manager.serializers import (
     ProjectSerializer,
     IssueSerializer,
@@ -61,7 +61,14 @@ class ProjectViewSet(MultipleSerializerMixin, ModelViewSet):
 class IssueViewSet(MultipleSerializerMixin, ModelViewSet):
     serializer_class = IssueSerializer
     list_serializer_class = IssueListSerializer
-    permission_classes = [AuthorOrReadOnly]
+
+    def get_permissions(self):
+        """Return a different permission for partial_update action."""
+        if self.action == "partial_update":
+            self.permission_classes = [AuthorOrAssignee]
+        else:
+            self.permission_classes = [AuthorOrReadOnly]
+        return super().get_permissions()
 
     def get_queryset(self):
         """
@@ -95,6 +102,19 @@ class IssueViewSet(MultipleSerializerMixin, ModelViewSet):
     def perform_create(self, serializer):
         """The user who made the request is set as the author of the issue."""
         serializer.save(author=self.request.user)
+
+    def partial_update(self, request, *args, **kwargs):
+        """If the user is an assignee, he can only change the status of the issue."""
+        user = self.request.user
+        issue = self.get_object()
+        # Check if the user is an assignee of the issue and not the author and restrict
+        # the fields he can update to only status if it's the case
+        if user in issue.assignees.all() and user != issue.author:
+            if len(request.data) > 1 or "status" not in request.data:
+                raise PermissionDenied(
+                    "As a simple assignee, you can only change the status of this issue"
+                )
+        return super().partial_update(request, *args, **kwargs)
 
 
 class CommentViewSet(ModelViewSet):
