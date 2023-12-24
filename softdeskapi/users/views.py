@@ -38,3 +38,15 @@ class UserViewSet(ModelViewSet):
         else:
             self.permission_classes = [IsSelfOrAdmin]
         return super().get_permissions()
+
+    def update(self, request, *args, **kwargs):
+        """Override to prevent non admin users to change is_staff field."""
+        if not request.user.is_superuser and not request.user.is_staff:
+            request.data.pop("is_staff", None)
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        """Override to prevent non admin users to change is_staff field."""
+        if not request.user.is_superuser and not request.user.is_staff:
+            request.data.pop("is_staff", None)
+        return super().partial_update(request, *args, **kwargs)
